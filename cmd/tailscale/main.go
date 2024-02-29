@@ -239,11 +239,6 @@ func main() {
 		fatalErr(err)
 	}
 
-	err = localapiservice.ConfigureLocalApiJNIHandler(a.jvm, a.appCtx)
-	if err != nil {
-		fatalErr(err)
-	}
-
 	a.store = newStateStore(a.jvm, a.appCtx)
 	interfaces.RegisterInterfaceGetter(a.getInterfaces)
 	go func() {
@@ -316,8 +311,7 @@ func (a *App) runBackend(ctx context.Context) error {
 	h.PermitWrite = true
 	a.localAPI = localapiservice.New(h)
 
-	// Share the localAPI with the JNI shim
-	localapiservice.SetLocalAPIService(a.localAPI)
+	localapiservice.ConfigureShim(a.jvm, a.appCtx, a.localAPI, b.backend)
 
 	// Contrary to the documentation for VpnService.Builder.addDnsServer,
 	// ChromeOS doesn't fall back to the underlying network nameservers if
