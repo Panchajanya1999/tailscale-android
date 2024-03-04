@@ -4,7 +4,10 @@
 
 package com.tailscale.ipn.ui.service
 
-import android.util.Log
+import android.content.Context
+import android.content.Intent
+import com.tailscale.ipn.App
+import com.tailscale.ipn.IPNReceiver
 import com.tailscale.ipn.ui.localapi.LocalApiClient
 import com.tailscale.ipn.ui.notifier.Notifier
 
@@ -12,9 +15,15 @@ class IpnManager {
     var notifier = Notifier()
     var apiClient = LocalApiClient()
     val model: IpnModel
-    
+
+    private var context: Context? = null
+
+    fun setApp(app: App) {
+        context = app.applicationContext
+    }
+
     constructor() {
-        model = IpnModel(notifier, apiClient)   
+        model = IpnModel(notifier, apiClient)
     }
 
     // We share a single instance of the IPNManager across the entire application.
@@ -22,9 +31,30 @@ class IpnManager {
         @Volatile
         private var instance: IpnManager? = null
 
+        @JvmStatic
         fun getInstance() =
-            instance ?: synchronized(this) {
-                instance ?: IpnManager().also { instance = it }
-            }
+                instance ?: synchronized(this) {
+                    instance ?: IpnManager().also { instance = it }
+                }
+    }
+
+    fun startVPN() {
+        context?.let {
+            val intent = Intent(it, IPNReceiver::class.java)
+            intent.action = "com.tailscale.ipn.CONNECT_VPN"
+            it.sendBroadcast(intent)
+        }
+    }
+
+    fun stopVPN() {
+        context?.let {
+            val intent = Intent(it, IPNReceiver::class.java)
+            intent.action = "com.tailscale.ipn.DISCONNECT_VPN"
+            it.sendBroadcast(intent)
+        }
+    }
+
+    fun login() {
+        apiClient.startLoginInteractive()
     }
 }

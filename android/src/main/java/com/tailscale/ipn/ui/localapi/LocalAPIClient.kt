@@ -5,14 +5,17 @@
 package com.tailscale.ipn.ui.localapi
 
 import android.util.Log
-import com.tailscale.ipn.ui.model.*
+import com.tailscale.ipn.ui.model.BugReportID
+import com.tailscale.ipn.ui.model.Ipn
+import com.tailscale.ipn.ui.model.IpnLocal
+import com.tailscale.ipn.ui.model.IpnState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 
 typealias StatusResponseHandler = (Result<IpnState.Status>) -> Unit
 typealias BugReportIdHandler = (Result<BugReportID>) -> Unit
@@ -113,6 +116,14 @@ class LocalApiClient {
     fun getCurrentProfile(responseHandler: (Result<IpnLocal.LoginProfile>) -> Unit) {
         val req = LocalAPIRequest.currentProfile(responseHandler)
         executeRequest<IpnLocal.LoginProfile>(req)
+    }
+
+    fun startLoginInteractive() {
+        val req = LocalAPIRequest.startLoginInteractive { result ->
+            result.success?.let { Log.d("LocalApiClient", "Login started: $it") }
+                    ?: run { Log.e("LocalApiClient", "Error starting login: ${result.error}") }
+        }
+        executeRequest<String>(req)
     }
 
     // (jonathan) TODO: A (likely) exhaustive list of localapi endpoints required for

@@ -6,23 +6,22 @@ package com.tailscale.ipn.ui.notifier
 
 import android.util.Log
 import com.tailscale.ipn.ui.model.Ipn.Notify
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 typealias NotifierCallback = (Notify) -> Unit
 
 
 class Watcher(
-    val sessionId: String,
-    val mask: Int,
-    val callback: NotifierCallback
+        val sessionId: String,
+        val mask: Int,
+        val callback: NotifierCallback
 )
 
 // Notifier is a wrapper around the IPN Bus notifier.  It provides a way to watch the
@@ -43,12 +42,12 @@ class Notifier {
     // NotifyWatchOpt is a bitmask of options supplied to the notifier to specify which
     // what we want to see on the Noitfy bus
     enum class NotifyWatchOpt(val value: Int) {
-        engineUpdates(1 shl 0),
-        initialState(1 shl 1),
-        prefs(1 shl 2),
-        netmap(1 shl 3),
-        noPrivateKeys(1 shl 4),
-        initialTailFSShares(1 shl 5)
+        engineUpdates(0),
+        initialState(1),
+        prefs(2),
+        netmap(4),
+        noPrivateKey(8),
+        initialTailFSShares(16)
     }
 
     companion object {
@@ -144,9 +143,8 @@ class Notifier {
     fun watchAll(callback: NotifierCallback): String {
         return watchIPNBus(
                 NotifyWatchOpt.netmap.value or
-                NotifyWatchOpt.prefs.value or
-                NotifyWatchOpt.engineUpdates.value or
-                NotifyWatchOpt.initialState.value,
+                        NotifyWatchOpt.prefs.value or
+                        NotifyWatchOpt.initialState.value,
                 callback
         )
     }

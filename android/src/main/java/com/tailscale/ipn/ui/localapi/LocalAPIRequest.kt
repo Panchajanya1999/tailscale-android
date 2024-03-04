@@ -4,8 +4,11 @@
 
 package com.tailscale.ipn.ui.localapi
 
-import com.tailscale.ipn.ui.model.*
-import kotlinx.serialization.decodeFromString
+import com.tailscale.ipn.ui.model.BugReportID
+import com.tailscale.ipn.ui.model.Errors
+import com.tailscale.ipn.ui.model.Ipn
+import com.tailscale.ipn.ui.model.IpnLocal
+import com.tailscale.ipn.ui.model.IpnState
 import kotlinx.serialization.json.Json
 
 enum class LocalAPIEndpoint(val rawValue: String) {
@@ -60,7 +63,7 @@ class LocalAPIRequest<T>(
         val path: String,
         val method: String,
         val body: String? = null,
-        val responseHandler: (Result<T>) -> Unit,
+        val responseHandler: ((Result<T>) -> Unit)?,
         val parser: (String) -> Unit,
 ) {
     companion object {
@@ -107,6 +110,13 @@ class LocalAPIRequest<T>(
             val path = LocalAPIEndpoint.ProfilesCurrent.path()
             return LocalAPIRequest<IpnLocal.LoginProfile>(path, "GET", null, responseHandler) { resp ->
                 responseHandler(decode<IpnLocal.LoginProfile>(resp))
+            }
+        }
+
+        fun startLoginInteractive(responseHandler: (Result<String>) -> Unit): LocalAPIRequest<String> {
+            val path = LocalAPIEndpoint.LoginInteractive.path()
+            return LocalAPIRequest<String>(path, "POST", null, null) { resp ->
+                responseHandler(parseString(resp))
             }
         }
 
