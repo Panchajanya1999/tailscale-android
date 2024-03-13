@@ -7,6 +7,7 @@ import android.util.Log
 import com.tailscale.ipn.ui.localapi.LocalApiClient
 import com.tailscale.ipn.ui.model.Ipn
 import com.tailscale.ipn.ui.model.IpnLocal
+import com.tailscale.ipn.ui.model.IpnState
 import com.tailscale.ipn.ui.model.Netmap
 import com.tailscale.ipn.ui.notifier.Notifier
 import kotlinx.coroutines.CoroutineScope
@@ -38,6 +39,7 @@ class IpnModel(
     val version: StateFlow<String?> = MutableStateFlow(null)
     val loggedInUser: StateFlow<IpnLocal.LoginProfile?> = MutableStateFlow(null)
     val loginProfiles: StateFlow<List<IpnLocal.LoginProfile>?> = MutableStateFlow(null)
+    val mullvadNodes: StateFlow<Map<String, IpnState.PeerStatus>> = MutableStateFlow(emptyMap())
 
     val isUsingExitNode: Boolean
         get() {
@@ -60,12 +62,29 @@ class IpnModel(
         }
     }
 
+    // Reloads all of the available exit nodes and sets our mullvadNodesstate to the subset of those
+    // which have a non-null value for their Location.  This should be called every time you present
+    // the exit node dialog to the user to refresh the list of available nodes.
+    private suspend fun loadExitNodes() {
+        LocalApiClient.isReady.await()
+
+        apiClient.getStatus { result ->
+            result.success?.let { status ->
+                status.Peer?.let { peers ->
+                    val nodes = peers.filterValues { it.Location != null }
+                    mullvadNodes.set(nodes)
+                }
+            }
+        }
+    }
+
     private fun onNotifyChange(notify: Ipn.Notify) {
         notify.State?.let { s ->
             // Refresh the user profiles if we're transitioning out of the
             // NeedsLogin state.
             if (state.value == Ipn.State.NeedsLogin) {
                 scope.launch { loadUserProfiles() }
+                scope.launch { loadExitNodes() }
             }
 
             Log.d("IpnModel", "State changed: $s")

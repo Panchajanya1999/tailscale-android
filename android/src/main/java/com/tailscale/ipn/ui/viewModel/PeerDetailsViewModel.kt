@@ -30,6 +30,11 @@ class PeerDetailsViewModel(val model: IpnModel, val nodeId: StableNodeID) : View
             }
         }
 
+        peer?.Name?.let {
+            addresses = listOf(DisplayAddress(it)) + addresses
+        }
+        
+
         peer?.let { p ->
             info = listOf(
                     PeerSettingInfo(R.string.os, p.Hostinfo?.OS ?: ""),
