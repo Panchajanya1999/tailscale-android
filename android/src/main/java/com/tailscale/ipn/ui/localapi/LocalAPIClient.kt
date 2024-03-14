@@ -47,7 +47,7 @@ class LocalApiClient(private val scope: CoroutineScope) {
     //         the corresponding request.  Cookies must be unique for each request.
     private external fun doRequest(request: String, method: String, body: ByteArray?, cookie: String)
 
-    fun <T> executeRequest(request: LocalAPIRequest<T>) {
+    private fun <T> executeRequest(request: LocalAPIRequest<T>) {
         scope.launch {
             isReady.await()
             Log.d("LocalApiClient", "Executing request:${request.method}:${request.path}")

@@ -9,6 +9,7 @@
     <string name="unknown_user">Unknown User</string>
     <string name="connected">Connected</string>
     <string name="not_connected">Not Connected</string>
+    <string name="more">More</string>
 
     <!-- Strings for the about screen -->
     <string name="app_name">Tailscale</string>
@@ -35,7 +36,7 @@
     <string name="bug_report">Bug Report</string>
     <string name="use_ts_dns">Use Tailscale DNS</string>
 
-    <!-- Strings for the main scren -->
+    <!-- Strings for the main screen -->
     <string name="exit_node">Exit Node</string>
     <string name="starting">Starting…</string>
     <string name="connect_to_tailnet">"Connect to your %1$s tailnet"</string>
@@ -67,5 +68,11 @@
     <string name="in_x_days">in %1$s days</string>
     <string name="in_x_months">in %1$s months</string>
     <string name="in_x_years">in %1$s years</string>
+
+    <!-- Strings for ExitNode picker -->
+    <string name="choose_exit_node">Choose Exit Node</string>
+    <string name="tailnet_exit_nodes">Tailnet Exit Nodes</string>
+    <string name="mullvad_exit_nodes">Mullvad</string>
+    <string name="best_available">Best Available</string>
 
 </resources>

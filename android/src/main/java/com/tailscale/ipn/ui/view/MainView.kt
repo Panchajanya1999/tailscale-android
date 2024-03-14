@@ -4,6 +4,7 @@
 
 package com.tailscale.ipn.ui.view
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -83,7 +85,6 @@ fun MainView(viewModel: MainViewModel, navigation: MainViewNavigation) {
                 }
             }
 
-            // (jonathan) TODO: Show the selected exit node name here.
             if (state.value == Ipn.State.Running) {
                 ExitNodeStatus(navAction = navigation.onNavigateToExitNodes, stringResource(id = R.string.none))
             }
@@ -111,7 +112,7 @@ fun MainView(viewModel: MainViewModel, navigation: MainViewNavigation) {
 fun ExitNodeStatus(navAction: () -> Unit, exitNode: String = stringResource(id = R.string.none)) {
     Box(modifier = Modifier
             .clickable { navAction() }
-            .padding(horizontal = 8.dp)
+            .absolutePadding(left = 8.dp, right = 8.dp, bottom = 8.dp)
             .clip(shape = RoundedCornerShape(10.dp, 10.dp, 10.dp, 10.dp))
             .background(MaterialTheme.colorScheme.secondaryContainer)
             .fillMaxWidth()) {

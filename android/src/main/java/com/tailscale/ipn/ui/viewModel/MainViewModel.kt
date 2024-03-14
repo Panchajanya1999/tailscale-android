@@ -11,7 +11,7 @@ import com.tailscale.ipn.ui.model.Ipn.State
 import com.tailscale.ipn.ui.model.StableNodeID
 import com.tailscale.ipn.ui.service.IpnActions
 import com.tailscale.ipn.ui.service.IpnModel
-import com.tailscale.ipn.ui.service.set
+import com.tailscale.ipn.ui.util.set
 import com.tailscale.ipn.ui.util.PeerCategorizer
 import com.tailscale.ipn.ui.util.PeerSet
 import kotlinx.coroutines.flow.MutableStateFlow
