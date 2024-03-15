@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-enum class SettingType { NAV, SWITCH, NAV_WITH_TEXT }
+enum class SettingType { NAV, SWITCH, NAV_WITH_TEXT, TEXT }
 
 
 class ComposableStringFormatter(@StringRes val stringRes: Int, vararg val params: Any) {
@@ -45,7 +45,8 @@ data class SettingBundle(val title: String? = null, val settings: List<Setting>)
 data class Setting(
         val title: ComposableStringFormatter,
         val type: SettingType,
-        val enabled: StateFlow<Boolean> = MutableStateFlow(false),
+        val destructive: Boolean = false,
+        val enabled: StateFlow<Boolean> = MutableStateFlow(true),
         val value: StateFlow<String?>? = null,
         val isOn: StateFlow<Boolean?>? = null,
         val onClick: () -> Unit = {},
@@ -78,11 +79,13 @@ class SettingsViewModel(
     // The logged in user
     val model = ipnManager.model
     val mdmSettings = ipnManager.mdmSettings
-    
-    val user = model.loggedInUser.value
+
+    val user = model.loggedInUser
+
+    val state = model.state
 
     // Display name for the logged in user
-    val isAdmin = model.netmap.value?.SelfNode?.isAdmin ?: false
+    var isAdmin: StateFlow<Boolean> = MutableStateFlow(false)
 
     val useDNSSetting = Setting(
             R.string.use_ts_dns,
@@ -100,6 +103,12 @@ class SettingsViewModel(
             model.prefs.collect { prefs ->
                 useDNSSetting.isOn?.set(prefs?.CorpDNS)
                 useDNSSetting.enabled.set(prefs != null)
+            }
+        }
+
+        viewModelScope.launch {
+            model.netmap.collect { netmap ->
+                isAdmin.set(netmap?.SelfNode?.isAdmin ?: false)
             }
         }
     }

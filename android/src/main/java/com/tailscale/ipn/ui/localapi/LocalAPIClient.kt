@@ -98,24 +98,51 @@ class LocalApiClient(private val scope: CoroutineScope) {
         executeRequest(req)
     }
 
-    fun getCurrentProfile(responseHandler: (Result<IpnLocal.LoginProfile>) -> Unit) {
-        val req = LocalAPIRequest.currentProfile(responseHandler)
+    fun getCurrentProfile(responseHandler: (Result<IpnLocal.LoginProfile?>) -> Unit) {
+        val req = LocalAPIRequest.currentProfile {
+            when (it.isSuccess) {
+                true -> it.getOrNull()?.let { profile ->
+                    when (profile.ID.isEmpty()) {
+                        true -> {
+                            // An empty profile means "not logged in".  Instead of representing empty
+                            // profiles with a struct, we represent them with null in the model.
+                            responseHandler(Result.success(null))
+                        }
+
+                        false -> responseHandler(it)
+                    }
+                }
+
+                false -> responseHandler(it)
+            }
+        }
         executeRequest(req)
     }
 
-    fun startLoginInteractive() {
-        val req = LocalAPIRequest.startLoginInteractive { result ->
-            result.success?.let { Log.d("LocalApiClient", "Login started: $it") }
-                    ?: run { Log.e("LocalApiClient", "Error starting login: ${result.error}") }
-        }
+    fun addProfile(responseHandler: (Result<String>) -> Unit = {}) {
+        val req = LocalAPIRequest.addProfile(responseHandler)
         executeRequest<String>(req)
     }
 
-    fun logout() {
-        val req = LocalAPIRequest.logout { result ->
-            result.success?.let { Log.d("LocalApiClient", "Logout started: $it") }
-                    ?: run { Log.e("LocalApiClient", "Error starting logout: ${result.error}") }
-        }
+    fun deleteProfile(profile: IpnLocal.LoginProfile, responseHandler: (Result<String>) -> Unit = {}) {
+        val req = LocalAPIRequest.deleteProfile(profile, responseHandler)
+        executeRequest<String>(req)
+    }
+
+    fun switchProfile(profile: IpnLocal.LoginProfile, responseHandler: (Result<String>) -> Unit = {}) {
+        val req = LocalAPIRequest.switchProfile(profile, responseHandler)
+        executeRequest<String>(req)
+    }
+
+    fun startLoginInteractive(responseHandler: (Result<String>) -> Unit = {}) {
+        val req = LocalAPIRequest.startLoginInteractive(responseHandler)
+        executeRequest<String>(req)
+    }
+
+    // Logs out the current user.  Do not generally call this directly, rather, use the IpnManager.logout
+    // function as this will also clear the loggedInUser state in the IpnModel on success
+    fun logout(responseHandler: (Result<String>) -> Unit = {}) {
+        val req = LocalAPIRequest.logout(responseHandler)
         executeRequest<String>(req)
     }
 
@@ -133,14 +160,9 @@ class LocalApiClient(private val scope: CoroutineScope) {
     // debugLog
     // uploadClientMetrics
     // start
-    // startLoginInteractive
-    // logout
-    // addProfile
-    // switchProfile
-    // deleteProfile
     // tailnetLocalStatus
     // signNode
-    // verifyDeepling
+    // verifyDeeplink
     // ping
     // setTailFSFileServerAddress
     init {

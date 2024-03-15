@@ -46,17 +46,21 @@ class IpnModel(
 
     // Backend Observation
 
-    private suspend fun loadUserProfiles() {
+    suspend fun loadUserProfiles() {
         LocalApiClient.isReady.await()
 
         apiClient.getProfiles { result ->
-            result.success?.let(loginProfiles::set)
-                    ?: run { Log.e("IpnManager", "Error loading profiles: ${result.error}") }
+            when (result.isSuccess) {
+                true -> result.getOrNull()?.let(loginProfiles::set)
+                false -> Log.e("IpnManager", "Error loading profiles: ${result.exceptionOrNull()} ")
+            }
         }
 
         apiClient.getCurrentProfile { result ->
-            result.success?.let(loggedInUser::set)
-                    ?: run { Log.e("IpnManager", "Error loading current profile: ${result.error}") }
+            when (result.isSuccess) {
+                true -> result.getOrNull().let(loggedInUser::set)
+                false -> Log.e("IpnManager", "Error loading current profile: ${result.exceptionOrNull()} ")
+            }
         }
     }
 
@@ -68,7 +72,7 @@ class IpnModel(
                 scope.launch { loadUserProfiles() }
             }
 
-            Log.d("IpnModel", "State changed: $s")
+            Log.v("IpnModel", "State changed: $s")
             state.set(Ipn.State.fromInt(s))
         }
 

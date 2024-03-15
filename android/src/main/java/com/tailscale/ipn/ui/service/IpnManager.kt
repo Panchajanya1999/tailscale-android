@@ -10,8 +10,10 @@ import com.tailscale.ipn.IPNReceiver
 import com.tailscale.ipn.mdm.MDMSettings
 import com.tailscale.ipn.ui.localapi.LocalApiClient
 import com.tailscale.ipn.ui.model.Ipn
+import com.tailscale.ipn.ui.model.IpnLocal
 import com.tailscale.ipn.ui.notifier.Notifier
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 typealias PrefChangeCallback = (Result<Boolean>) -> Unit
 
@@ -20,12 +22,15 @@ typealias PrefChangeCallback = (Result<Boolean>) -> Unit
 interface IpnActions {
     fun startVPN()
     fun stopVPN()
-    fun login()
-    fun logout()
+    fun login(completionHandler: (Result<String>) -> Unit = {})
+    fun logout(completionHandler: (Result<String>) -> Unit = {})
+    fun deleteProfile(profile: IpnLocal.LoginProfile, completionHandler: (Result<String>) -> Unit = {})
+    fun addProfile(completionHandler: (Result<String>) -> Unit = {})
+    fun switchProfile(profile: IpnLocal.LoginProfile, completionHandler: (Result<String>) -> Unit = {})
     fun updatePrefs(prefs: Ipn.MaskedPrefs, callback: PrefChangeCallback)
 }
 
-class IpnManager(scope: CoroutineScope) : IpnActions {
+class IpnManager(val scope: CoroutineScope) : IpnActions {
     private var notifier = Notifier()
 
     var apiClient = LocalApiClient(scope)
@@ -46,21 +51,46 @@ class IpnManager(scope: CoroutineScope) : IpnActions {
         context.sendBroadcast(intent)
     }
 
-    override fun login() {
-        apiClient.startLoginInteractive()
+
+    override fun login(completionHandler: (Result<String>) -> Unit) {
+        apiClient.startLoginInteractive(completionHandler)
     }
 
-    override fun logout() {
-        apiClient.logout()
+    override fun logout(completionHandler: (Result<String>) -> Unit) {
+        apiClient.logout {
+            if (it.isSuccess) {
+                model.loggedInUser.set(null)
+            }
+            completionHandler(it)
+        }
+    }
+
+    override fun switchProfile(profile: IpnLocal.LoginProfile, completionHandler: (Result<String>) -> Unit) {
+        apiClient.switchProfile(profile) {
+            scope.launch { model.loadUserProfiles() }
+            completionHandler(it)
+        }
+    }
+
+    override fun addProfile(completionHandler: (Result<String>) -> Unit) {
+        apiClient.addProfile {
+            if (it.isSuccess) {
+                login()
+            }
+            completionHandler(it)
+        }
+    }
+
+    override fun deleteProfile(profile: IpnLocal.LoginProfile, completionHandler: (Result<String>) -> Unit) {
+        apiClient.deleteProfile(profile) {
+            scope.launch { model.loadUserProfiles() }
+            completionHandler(it)
+        }
     }
 
     override fun updatePrefs(prefs: Ipn.MaskedPrefs, callback: PrefChangeCallback) {
         apiClient.editPrefs(prefs) { result ->
-            result.success?.let {
-                callback(Result.success(true))
-            } ?: run {
-                callback(Result.failure(Throwable(result.error)))
-            }
+            callback(Result.success(result.isSuccess))
         }
     }
 }

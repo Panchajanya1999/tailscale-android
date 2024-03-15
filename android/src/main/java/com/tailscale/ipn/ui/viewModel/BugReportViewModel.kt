@@ -19,10 +19,7 @@ class BugReportViewModel(localAPI: LocalApiClient) : ViewModel() {
     init {
         viewModelScope.launch {
             localAPI.getBugReportId {
-                when (it.successful) {
-                    true -> bugReportID.set(it.success ?: "(Error fetching ID)")
-                    false -> bugReportID.set("(Error fetching ID)")
-                }
+                it.getOrNull()?.let(bugReportID::set) ?: bugReportID.set("(Error fetching ID)")
             }
         }
     }

@@ -29,11 +29,13 @@ import com.tailscale.ipn.ui.view.ManagedByView
 import com.tailscale.ipn.ui.view.PeerDetails
 import com.tailscale.ipn.ui.view.Settings
 import com.tailscale.ipn.ui.view.SettingsNav
+import com.tailscale.ipn.ui.view.UserSwitcherView
 import com.tailscale.ipn.ui.viewModel.BugReportViewModel
 import com.tailscale.ipn.ui.viewModel.ExitNodePickerViewModel
 import com.tailscale.ipn.ui.viewModel.MainViewModel
 import com.tailscale.ipn.ui.viewModel.PeerDetailsViewModel
 import com.tailscale.ipn.ui.viewModel.SettingsViewModel
+import com.tailscale.ipn.ui.viewModel.UserSwitcherViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -53,14 +55,15 @@ class MainActivity : ComponentActivity() {
                             onNavigateToPeerDetails = {
                                 navController.navigate("peerDetails/${it.StableID}")
                             },
-                            onNavigateToExitNodes = { navController.navigate("exitNodes") }
+                            onNavigateToExitNodes = { navController.navigate("exitNodes") },
                     )
 
                     val settingsNav = SettingsNav(
                             onNavigateToBugReport = { navController.navigate("bugReport") },
                             onNavigateToAbout = { navController.navigate("about") },
                             onNavigateToMDMSettings = { navController.navigate("mdmSettings") },
-                            onNavigateToManagedBy = { navController.navigate("managedBy") }
+                            onNavigateToManagedBy = { navController.navigate("managedBy") },
+                            onNavigateToUserSwitcher = { navController.navigate("userSwitcher") }
                     )
 
                     composable("main") {
@@ -99,6 +102,9 @@ class MainActivity : ComponentActivity() {
                     composable("managedBy") {
                         ManagedByView(manager.mdmSettings)
                     }
+                    composable("userSwitcher") {
+                        UserSwitcherView(UserSwitcherViewModel(manager))
+                    }
                 }
             }
         }
@@ -133,4 +139,3 @@ class MainActivity : ComponentActivity() {
         manager.mdmSettings = MDMSettings(restrictionsManager)
     }
 }
-

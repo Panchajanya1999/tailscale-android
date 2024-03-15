@@ -72,36 +72,19 @@ class LocalAPIRequest<T>(
         val decoder = Json { ignoreUnknownKeys = true }
 
         fun <T> get(path: String, body: ByteArray? = null, parser: (ByteArray) -> Unit) =
-                LocalAPIRequest<T>(
-                        method = "GET",
-                        path = path,
-                        body = body,
-                        parser = parser
-                )
+                LocalAPIRequest<T>(method = "GET", path = path, body = body, parser = parser)
 
         fun <T> put(path: String, body: ByteArray? = null, parser: (ByteArray) -> Unit) =
-                LocalAPIRequest<T>(
-                        method = "PUT",
-                        path = path,
-                        body = body,
-                        parser = parser
-                )
+                LocalAPIRequest<T>(method = "PUT", path = path, body = body, parser = parser)
+
+        fun <T> delete(path: String, body: ByteArray? = null, parser: (ByteArray) -> Unit) =
+                LocalAPIRequest<T>(method = "DELETE", path = path, body = body, parser = parser)
 
         fun <T> post(path: String, body: ByteArray? = null, parser: (ByteArray) -> Unit) =
-                LocalAPIRequest<T>(
-                        method = "POST",
-                        path = path,
-                        body = body,
-                        parser = parser
-                )
+                LocalAPIRequest<T>(method = "POST", path = path, body = body, parser = parser)
 
         fun <T> patch(path: String, body: ByteArray? = null, parser: (ByteArray) -> Unit) =
-                LocalAPIRequest<T>(
-                        method = "PATCH",
-                        path = path,
-                        body = body,
-                        parser = parser
-                )
+                LocalAPIRequest<T>(method = "PATCH", path = path, body = body, parser = parser)
 
         fun status(responseHandler: StatusResponseHandler): LocalAPIRequest<IpnState.Status> {
             return get(Endpoint.STATUS) { resp ->
@@ -128,7 +111,6 @@ class LocalAPIRequest<T>(
             }
         }
 
-
         fun profiles(responseHandler: (Result<List<IpnLocal.LoginProfile>>) -> Unit): LocalAPIRequest<List<IpnLocal.LoginProfile>> {
             return get(Endpoint.PROFILES) { resp ->
                 responseHandler(decode<List<IpnLocal.LoginProfile>>(resp))
@@ -138,6 +120,25 @@ class LocalAPIRequest<T>(
         fun currentProfile(responseHandler: (Result<IpnLocal.LoginProfile>) -> Unit): LocalAPIRequest<IpnLocal.LoginProfile> {
             return get(Endpoint.PROFILES_CURRENT) { resp ->
                 responseHandler(decode<IpnLocal.LoginProfile>(resp))
+            }
+        }
+
+        fun addProfile(responseHandler: (Result<String>) -> Unit): LocalAPIRequest<String> {
+            return put(Endpoint.PROFILES) { resp ->
+                responseHandler(parseString(resp))
+            }
+        }
+
+        fun deleteProfile(profile: IpnLocal.LoginProfile, responseHandler: (Result<String>) -> Unit): LocalAPIRequest<String> {
+            val body = Json.encodeToString(profile).toByteArray()
+            return delete(Endpoint.PROFILES + profile.ID, body) { resp ->
+                responseHandler(parseString(resp))
+            }
+        }
+
+        fun switchProfile(profile: IpnLocal.LoginProfile, responseHandler: (Result<String>) -> Unit): LocalAPIRequest<String> {
+            return post(Endpoint.PROFILES + profile.ID) { resp ->
+                responseHandler(parseString(resp))
             }
         }
 
@@ -164,11 +165,12 @@ class LocalAPIRequest<T>(
             }
         }
 
-        // Handles responses that are raw strings.  Returns an error result if the string
-        // is empty
+        // Handles responses that are raw strings.
+        // (jonathan) TODO: The handling here is no universally true.  Some APIs will just forward
+        // go error strings and expect us to figure out that those are errors.
         private fun parseString(respData: ByteArray): Result<String> {
-            return if (respData.isNotEmpty()) Result(respData.decodeToString())
-            else Result(APIErrorVals.UNPARSEABLE_RESPONSE.toError())
+            // An empty response is a success
+            return Result.success(respData.decodeToString())
         }
 
         // Attempt to decode the response into the expected type.  If that fails, then try
@@ -177,9 +179,9 @@ class LocalAPIRequest<T>(
         private inline fun <reified T> decode(respData: ByteArray): Result<T> {
             return try {
                 val message = decoder.decodeFromStream<T>(respData.inputStream())
-                Result(message)
+                Result.success(message)
             } catch (e: Exception) {
-                Result(parseError(respData))
+                Result.failure(parseError(respData))
             }
         }
     }

@@ -4,7 +4,6 @@
 package com.tailscale.ipn.ui.service
 
 import com.tailscale.ipn.ui.localapi.APIErrorVals
-import com.tailscale.ipn.ui.localapi.Result
 import com.tailscale.ipn.ui.model.Ipn
 
 
@@ -33,7 +32,7 @@ fun IpnModel.setWantRunning(wantRunning: Boolean, callback: (Result<Ipn.Prefs>) 
 
 fun IpnModel.toggleCorpDNS(callback: (Result<Ipn.Prefs>) -> Unit) {
     val prefs = prefs.value ?: run {
-        callback(Result(Error(APIErrorVals.NO_PREFS.rawValue)))
+        callback(Result.failure(Error(APIErrorVals.NO_PREFS.rawValue)))
         return@toggleCorpDNS
     }
 
@@ -44,7 +43,7 @@ fun IpnModel.toggleCorpDNS(callback: (Result<Ipn.Prefs>) -> Unit) {
 
 fun IpnModel.toggleShieldsUp(callback: (Result<Ipn.Prefs>) -> Unit) {
     val prefs = prefs.value ?: run {
-        callback(Result(Error(APIErrorVals.NO_PREFS.rawValue)))
+        callback(Result.failure(Error(APIErrorVals.NO_PREFS.rawValue)))
         return@toggleShieldsUp
     }
 
@@ -61,7 +60,7 @@ fun IpnModel.setExitNodeId(id: String, callback: (Result<Ipn.Prefs>) -> Unit) {
 
 fun IpnModel.toggleRouteAll(callback: (Result<Ipn.Prefs>) -> Unit) {
     val prefs = prefs.value ?: run {
-        callback(Result(Error(APIErrorVals.NO_PREFS.rawValue)))
+        callback(Result.failure(Error(APIErrorVals.NO_PREFS.rawValue)))
         return@toggleRouteAll
     }
 
